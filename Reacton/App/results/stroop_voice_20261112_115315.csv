@@ -1,0 +1,16 @@
+﻿trial_number,condition,word,ink_color,response_mode,response_color,response_key,reaction_time_ms,correct,no_response,isi_ms,audio_file,stimulus_onset_psychopy
+1,incongruent,سبز,زرد,voice,زرد,,870.0,True,False,1990.06,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_001.wav,67.20190029998776
+2,congruent,قرمز,قرمز,voice,قرمز,,600.0,True,False,1487.44,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_002.wav,70.60746840000502
+3,congruent,آبی,آبی,voice,آبی,,610.0,True,False,1872.25,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_003.wav,74.20935079999617
+4,neutral,XXXX,سبز,voice,سبز,,740.0,True,False,1093.46,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_004.wav,77.04444159998093
+5,incongruent,سبز,قرمز,voice,قرمز,,870.0,True,False,1483.09,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_005.wav,80.26753230000031
+6,neutral,XXXX,سبز,voice,سبز,,780.0,True,False,1707.12,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_006.wav,83.70437659998424
+7,neutral,XXXX,آبی,voice,آبی,,1000.0,True,False,1207.11,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_007.wav,86.63525679998565
+8,incongruent,آبی,زرد,voice,زرد,,660.0,True,False,1596.83,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_008.wav,89.9734243999992
+9,congruent,آبی,آبی,voice,آبی,,510.0,True,False,1577.22,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_009.wav,93.26798909998615
+10,neutral,XXXX,زرد,voice,زرد,,690.0,True,False,1640.1,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_010.wav,96.64945369999623
+11,incongruent,قرمز,سبز,voice,سبز,,910.0,True,False,1068.79,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_011.wav,99.47510139999213
+12,incongruent,زرد,قرمز,voice,قرمز,,770.0,True,False,1612.91,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_012.wav,102.81896559998859
+13,congruent,سبز,سبز,voice,سبز,,710.0,True,False,1230.39,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_013.wav,105.7859438000014
+14,congruent,زرد,زرد,voice,زرد,,530.0,True,False,1259.08,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_014.wav,108.79689949998283
+15,neutral,XXXX,زرد,voice,زرد,,560.0,True,False,1408.29,C:\Users\Sepehr\Desktop\PythonProject\Reacton\App\results\stroop_audio_20261112_115315\trial_015.wav,111.97648969999864

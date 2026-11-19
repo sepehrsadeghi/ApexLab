@@ -1,0 +1,2 @@
+﻿phase,trial,stimulus,fixation_duration_s,response_key,response_rt_ms,anticipatory_response,correct,omission_error,commission_error,correct_rejection,reaction_time_valid
+PRACTICE,1,NOGO,1.449,space,322.0,False,False,False,True,False,False

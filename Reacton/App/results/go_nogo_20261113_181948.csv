@@ -1,0 +1,6 @@
+﻿phase,trial,stimulus,fixation_duration_s,response_key,response_rt_ms,anticipatory_response,correct,omission_error,commission_error,correct_rejection,reaction_time_valid
+PRACTICE,1,GO,0.935,,,False,False,True,False,False,False
+PRACTICE,2,GO,1.236,,,False,False,True,False,False,False
+PRACTICE,3,GO,0.814,,,False,False,True,False,False,False
+PRACTICE,4,GO,1.317,,,False,False,True,False,False,False
+PRACTICE,5,GO,1.193,,,False,False,True,False,False,False
