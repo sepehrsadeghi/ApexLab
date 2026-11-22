@@ -1,11 +1,12 @@
+
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# پیدا کردن فایل .env در پوشه اصلی پروژه
+# Find .env in the project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR / ".env"
 
@@ -28,6 +29,8 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine
 )
+
+Base = declarative_base()
 
 
 def get_db():
