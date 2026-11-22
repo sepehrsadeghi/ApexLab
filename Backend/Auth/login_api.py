@@ -1,54 +1,59 @@
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from passlib.context import CryptContext
 
 from Backend.database import get_db
 from Backend.models import User
-from Backend.Auth.schemas import LoginSchema
-from Backend.Auth.security import (
-    verify_password,
-    create_access_token,
-)
 
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["Authentication"],
-)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 @router.post("/login")
-def login_user(
-    payload: LoginSchema,
-    db: Session = Depends(get_db),
-):
-    username = payload.username.strip().lower()
+def login(data: dict, db: Session = Depends(get_db)):
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        raise HTTPException(
+            status_code=400,
+            detail="Username and password are required"
+        )
 
     user = db.query(User).filter(
         User.username == username
     ).first()
 
-    if user is None or not verify_password(
-        payload.password,
-        user.password_hash,
-    ):
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="نام کاربری یا رمز عبور اشتباه است.",
+            status_code=401,
+            detail="Invalid username or password"
         )
 
-    token = create_access_token(user.id)
+    try:
+        password_valid = pwd_context.verify(
+            password,
+            user.password_hash
+        )
+    except Exception:
+        password_valid = False
+
+    if not password_valid:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password"
+        )
 
     return {
-        "message": "ورود موفقیت‌آمیز بود.",
-        "access_token": token,
-        "token_type": "bearer",
+        "message": "Login successful",
         "user": {
             "id": str(user.id),
             "first_name": user.first_name,
             "last_name": user.last_name,
             "username": user.username,
             "gender": user.gender,
-            "age": user.age,
-        },
+            "age": user.age
+        }
     }
