@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -8,11 +7,7 @@ from Backend.models import User
 from Backend.Auth.schemas import RegisterSchema
 from Backend.Auth.security import hash_password
 
-
-router = APIRouter(
-    prefix="/auth",
-    tags=["Authentication"],
-)
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -45,14 +40,15 @@ def register_user(
         db.add(user)
         db.commit()
         db.refresh(user)
-
     except IntegrityError:
         db.rollback()
-
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="این نام کاربری قبلاً ثبت شده است.",
         )
+    except Exception:
+        db.rollback()
+        raise
 
     return {
         "message": "ثبت‌نام با موفقیت انجام شد.",

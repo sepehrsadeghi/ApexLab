@@ -1,250 +1,316 @@
-import sys
-from pathlib import Path
 
+import sys
 import requests
 
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QStackedWidget, QMessageBox
+    QApplication,
+    QMainWindow,
+    QStackedWidget,
+    QMessageBox,
 )
-from PySide6.QtGui import QIcon
 
 from login_screen import LoginScreen
 from register_screen import RegisterScreen
 from dashboard_screen import DashboardScreen
 from tests_screen import TestsScreen
+
 from srt_screen import SRTScreen
 from peripheral_screen import PeripheralScreen
+from stroop_screen import StroopScreen
+from go_nogo_screen import GoNoGoScreen
+from cat_screen import CatScreen
+from mot_screen import MOTScreen
 
 
-API_URL = "http://127.0.0.1:8001"
+API_URL = "https://apexlab-api.onrender.com"
 
 
-class SportReactionApp(QMainWindow):
+class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
 
-        self.base_dir = Path(__file__).resolve().parent
-        self.assets_dir = self.base_dir / "assets"
+        self.setWindowTitle("Athlete Performance App")
+        self.resize(1100, 750)
 
-        self.setWindowTitle("ApexLab")
-        self.setMinimumSize(1100, 700)
-        self.setWindowIcon(QIcon(str(self.assets_dir / "apexlab_icon.png")))
-
+        self.access_token = None
         self.current_user = None
 
         self.stack = QStackedWidget()
         self.setCentralWidget(self.stack)
 
+        # ساخت صفحات
         self.login_screen = LoginScreen()
         self.register_screen = RegisterScreen()
+        self.dashboard_screen = DashboardScreen()
         self.tests_screen = TestsScreen()
+
         self.srt_screen = SRTScreen()
         self.peripheral_screen = PeripheralScreen()
-        self.dashboard_screen = None
+        self.stroop_screen = StroopScreen()
+        self.go_nogo_screen = GoNoGoScreen()
+        self.cat_screen = CatScreen()
+        self.mot_screen = MOTScreen()
 
-        for screen in (
+        screens = [
             self.login_screen,
             self.register_screen,
+            self.dashboard_screen,
             self.tests_screen,
             self.srt_screen,
             self.peripheral_screen,
-        ):
+            self.stroop_screen,
+            self.go_nogo_screen,
+            self.cat_screen,
+            self.mot_screen,
+        ]
+
+        for screen in screens:
             self.stack.addWidget(screen)
 
-        self.login_screen.login_submitted.connect(self.handle_login)
-        self.login_screen.register_clicked.connect(self.show_register)
-
-        self.register_screen.registration_submitted.connect(
-            self.handle_registration
+        # اتصال ورود
+        self.login_screen.login_submitted.connect(
+            self.authenticate_user
         )
-        self.register_screen.back_to_login.connect(self.show_login)
 
-        self.tests_screen.back_clicked.connect(self.open_dashboard)
-        self.tests_screen.test_selected.connect(self.open_selected_test)
+        self.login_screen.login_success.connect(
+            self.open_dashboard
+        )
+
+        self.login_screen.register_requested.connect(
+            self.open_register
+        )
+
+        # اتصال ثبت‌نام
+        self.register_screen.registration_submitted.connect(
+            self.create_account
+        )
+
+        self.register_screen.back_to_login.connect(
+            self.open_login
+        )
+
+        # اتصال داشبورد
+        self.dashboard_screen.logout_requested.connect(
+            self.logout
+        )
+
+        self.dashboard_screen.tests_requested.connect(
+            self.open_tests
+        )
+
+        # اتصال آزمون‌ها
+        self.tests_screen.back_clicked.connect(
+            self.open_dashboard
+        )
+
+        self.tests_screen.test_selected.connect(
+            self.open_selected_test
+        )
+
         self.srt_screen.back_clicked.connect(self.open_tests)
         self.peripheral_screen.back_clicked.connect(self.open_tests)
+        self.stroop_screen.back_clicked.connect(self.open_tests)
+        self.go_nogo_screen.back_clicked.connect(self.open_tests)
+        self.cat_screen.back_clicked.connect(self.open_tests)
+        self.mot_screen.back_clicked.connect(self.open_tests)
 
-        self.show_login()
+        self.open_login()
 
-    def show_login(self):
-        self.stack.setCurrentWidget(self.login_screen)
+    # ---------------- LOGIN ----------------
 
-    def show_register(self):
-        self.stack.setCurrentWidget(self.register_screen)
-
-    def handle_registration(self, user_data):
-
-        payload = {
-            "first_name": user_data["first_name"],
-            "last_name": user_data["last_name"],
-            "username": user_data["username"],
-            "password": user_data["password"],
-            "gender": user_data["gender"]
-        }
-
-        try:
-            response = requests.post(
-                f"{API_URL}/auth/register",
-                json=payload,
-                timeout=15
-            )
-
-            if response.status_code == 409:
-                QMessageBox.warning(
-                    self, "ثبت‌نام ناموفق",
-                    "این نام کاربری قبلاً ثبت شده است."
-                )
-                return
-
-            response.raise_for_status()
-
-            QMessageBox.information(
-                self, "ثبت‌نام موفق",
-                "حساب کاربری با موفقیت ایجاد شد."
-            )
-
-            self.login_screen.username_input.setText(
-                user_data["username"]
-            )
-            self.login_screen.password_input.clear()
-            self.show_login()
-
-        except requests.exceptions.ConnectionError:
-            QMessageBox.critical(
-                self, "خطای اتصال",
-                "ارتباط با سرور برقرار نشد. "
-                "مطمئن شوید بک‌اند در حال اجراست."
-            )
-
-        except requests.exceptions.Timeout:
-            QMessageBox.warning(
-                self, "پایان زمان انتظار",
-                "سرور در زمان مشخص‌شده پاسخ نداد."
-            )
-
-        except requests.exceptions.HTTPError:
-            try:
-                message = response.json().get(
-                    "detail", "اطلاعات ثبت‌نام معتبر نیست."
-                )
-            except ValueError:
-                message = "خطا در ثبت‌نام."
-
-            QMessageBox.warning(self, "خطای ثبت‌نام", str(message))
-
-        except Exception as error:
-            QMessageBox.critical(
-                self, "خطای غیرمنتظره", str(error)
-            )
-
-    def handle_login(self, username, password):
-
-        payload = {
-            "username": username.strip(),
-            "password": password
-        }
-
+    def authenticate_user(self, username, password):
         try:
             response = requests.post(
                 f"{API_URL}/auth/login",
-                json=payload,
-                timeout=15
+                json={
+                    "username": username,
+                    "password": password,
+                },
+                timeout=60,
             )
+            print("LOGIN STATUS:", response.status_code)
+            try:
+                data = response.json()
+            except ValueError:
+                data = {}
 
-            if response.status_code == 401:
-                QMessageBox.warning(
-                    self, "خطای ورود",
-                    "نام کاربری یا رمز عبور اشتباه است."
-                )
+            if response.status_code == 200:
+                token = data.get("access_token")
+
+                if not token:
+                    self.login_screen.show_login_error(
+                        "پاسخ سرور معتبر نیست."
+                    )
+                    return
+
+                self.access_token = token
+                self.current_user = data.get("user", {})
+
+                self.login_screen.show_login_success()
                 return
 
-            response.raise_for_status()
-
-            data = response.json()
-            user = data["user"]
-
-            # هماهنگ‌سازی اطلاعات دریافتی با داشبورد
-            self.current_user = {
-                **user,
-                "full_name": (
-                    user["first_name"] + " " + user["last_name"]
+            if response.status_code == 401:
+                message = "نام کاربری یا رمز عبور اشتباه است."
+            elif response.status_code == 422:
+                message = "اطلاعات ورود معتبر نیست."
+            else:
+                detail = data.get(
+                    "detail",
+                    "ورود به حساب با خطا مواجه شد."
                 )
-            }
+                message = (
+                    detail if isinstance(detail, str)
+                    else "اطلاعات ورود معتبر نیست."
+                )
 
-            self.login_screen.password_input.clear()
-            self.open_dashboard()
-
-        except requests.exceptions.ConnectionError:
-            QMessageBox.critical(
-                self, "خطای اتصال",
-                "ارتباط با سرور برقرار نشد. "
-                "مطمئن شوید بک‌اند در حال اجراست."
-            )
+            self.login_screen.show_login_error(message)
 
         except requests.exceptions.Timeout:
-            QMessageBox.warning(
-                self, "پایان زمان انتظار",
-                "سرور در زمان مشخص‌شده پاسخ نداد."
+            self.login_screen.show_login_error(
+                "پاسخ سرور بیش از حد طول کشید."
             )
 
-        except requests.exceptions.HTTPError:
-            QMessageBox.warning(
-                self, "خطای ورود",
-                "در ورود به حساب مشکلی رخ داد."
+        except requests.exceptions.ConnectionError:
+            self.login_screen.show_login_error(
+                "اتصال به سرور برقرار نشد. اینترنت را بررسی کنید."
+            )
+
+        except requests.exceptions.RequestException as error:
+            print("Login request error:", error)
+            self.login_screen.show_login_error(
+                "ارتباط با سرور با مشکل مواجه شد."
             )
 
         except Exception as error:
-            QMessageBox.critical(
-                self, "خطای غیرمنتظره", str(error)
+            print("Login error:", error)
+            self.login_screen.show_login_error(
+                "خطای غیرمنتظره هنگام ورود رخ داد."
             )
 
-    def open_dashboard(self):
+    # ---------------- REGISTER ----------------
 
-        if self.current_user is None:
-            self.show_login()
-            return
+    def create_account(self, user_data):
+        try:
+            response = requests.post(
+                f"{API_URL}/auth/register",
+                json=user_data,
+                timeout=60,
+            )
 
-        if self.dashboard_screen is not None:
-            self.stack.removeWidget(self.dashboard_screen)
-            self.dashboard_screen.deleteLater()
+            try:
+                data = response.json()
+            except ValueError:
+                data = {}
 
-        self.dashboard_screen = DashboardScreen(self.current_user)
-        self.stack.addWidget(self.dashboard_screen)
+            if response.status_code in (200, 201):
+                self.register_screen.show_registration_success()
 
-        self.dashboard_screen.new_test_clicked.connect(self.open_tests)
-        self.dashboard_screen.logout_clicked.connect(self.logout)
+                QMessageBox.information(
+                    self,
+                    "ثبت‌نام موفق",
+                    "حساب کاربری با موفقیت ایجاد شد. "
+                    "اکنون می‌توانید وارد شوید."
+                )
 
+                self.open_login()
+                return
+
+            if response.status_code == 409:
+                message = "این نام کاربری قبلاً ثبت شده است."
+
+            elif response.status_code == 422:
+                message = (
+                    "اطلاعات واردشده معتبر نیست. "
+                    "نام، نام خانوادگی، سن و رمز عبور را بررسی کنید."
+                )
+
+            else:
+                detail = data.get(
+                    "detail",
+                    "ثبت‌نام با خطا مواجه شد."
+                )
+
+                message = (
+                    detail if isinstance(detail, str)
+                    else "اطلاعات ثبت‌نام معتبر نیست."
+                )
+
+            self.register_screen.show_registration_error(message)
+
+        except requests.exceptions.Timeout:
+            self.register_screen.show_registration_error(
+                "پاسخ سرور بیش از حد طول کشید. دوباره تلاش کنید."
+            )
+
+        except requests.exceptions.ConnectionError:
+            self.register_screen.show_registration_error(
+                "اتصال به سرور برقرار نشد. اینترنت را بررسی کنید."
+            )
+
+        except requests.exceptions.RequestException as error:
+            print("Registration request error:", error)
+
+            self.register_screen.show_registration_error(
+                "ارتباط با سرور با مشکل مواجه شد."
+            )
+
+        except Exception as error:
+            print("Registration error:", error)
+
+            self.register_screen.show_registration_error(
+                "خطای غیرمنتظره هنگام ثبت‌نام رخ داد."
+            )
+
+    # ---------------- NAVIGATION ----------------
+
+    def open_login(self):
+        self.stack.setCurrentWidget(self.login_screen)
+
+    def open_register(self):
+        self.stack.setCurrentWidget(self.register_screen)
+
+    def open_dashboard(self, *args):
         self.stack.setCurrentWidget(self.dashboard_screen)
-
-    def logout(self):
-        self.current_user = None
-        self.login_screen.password_input.clear()
-        self.show_login()
 
     def open_tests(self):
         self.stack.setCurrentWidget(self.tests_screen)
 
+    def logout(self):
+        self.access_token = None
+        self.current_user = None
+
+        self.login_screen.password_input.clear()
+        self.open_login()
+
     def open_selected_test(self, test_name):
+        test_name = str(test_name).strip().upper()
 
-        if test_name == "SRT":
-            self.stack.setCurrentWidget(self.srt_screen)
+        test_screens = {
+            "SRT": self.srt_screen,
+            "PERIPHERAL": self.peripheral_screen,
+            "STROOP": self.stroop_screen,
+            "GO_NOGO": self.go_nogo_screen,
+            "CAT": self.cat_screen,
+            "MOT": self.mot_screen,
+        }
 
-        elif test_name == "PERIPHERAL":
-            self.stack.setCurrentWidget(self.peripheral_screen)
+        screen = test_screens.get(test_name)
 
+        if screen is not None:
+            self.stack.setCurrentWidget(screen)
         else:
             QMessageBox.warning(
-                self, "خطا",
-                "آزمون انتخاب‌شده معتبر نیست."
+                self,
+                "آزمون نامعتبر",
+                f"شناسه آزمون معتبر نیست: {test_name}"
             )
-
-    def closeEvent(self, event):
-        event.accept()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = SportReactionApp()
+
+    window = MainWindow()
     window.show()
+
     sys.exit(app.exec())
